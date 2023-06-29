@@ -7,4 +7,5 @@ class _TaskItem {
   late ObjectId id;
   late String title;
   late String description;
+  late bool isDone;
 }

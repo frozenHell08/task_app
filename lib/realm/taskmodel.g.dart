@@ -12,10 +12,12 @@ class TaskItem extends _TaskItem
     ObjectId id,
     String title,
     String description,
+    bool isDone,
   ) {
     RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'title', title);
     RealmObjectBase.set(this, 'description', description);
+    RealmObjectBase.set(this, 'isDone', isDone);
   }
 
   TaskItem._();
@@ -38,6 +40,11 @@ class TaskItem extends _TaskItem
       RealmObjectBase.set(this, 'description', value);
 
   @override
+  bool get isDone => RealmObjectBase.get<bool>(this, 'isDone') as bool;
+  @override
+  set isDone(bool value) => RealmObjectBase.set(this, 'isDone', value);
+
+  @override
   Stream<RealmObjectChanges<TaskItem>> get changes =>
       RealmObjectBase.getChanges<TaskItem>(this);
 
@@ -52,6 +59,7 @@ class TaskItem extends _TaskItem
       SchemaProperty('id', RealmPropertyType.objectid, primaryKey: true),
       SchemaProperty('title', RealmPropertyType.string),
       SchemaProperty('description', RealmPropertyType.string),
+      SchemaProperty('isDone', RealmPropertyType.bool),
     ]);
   }
 }
