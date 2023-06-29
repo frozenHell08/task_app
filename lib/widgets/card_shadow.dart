@@ -43,7 +43,7 @@ class ShadowedCard extends StatelessWidget {
             ),
           ),
         ),
-        
+
         subtitle: Text(
           description,
           style: TextStyle(
@@ -52,21 +52,6 @@ class ShadowedCard extends StatelessWidget {
         ),
 
         // -------------------- BUTTONS --------------------
-        // trailing: Row(
-        //   mainAxisSize: MainAxisSize.min,
-        //   children: [
-        //     // RoundedIconButton(
-        //     //   icon: Icons.edit,
-        //     //   color: Colors.indigoAccent,
-        //     //   onPressed: onEditPressed,
-        //     // ),
-        //     RoundedIconButton(
-        //       icon: Icons.delete,
-        //       color: Colors.redAccent,
-        //       onPressed: onDeletePressed,
-        //     ),
-        //   ],
-        // ),
         trailing: RoundedIconButton(
           icon: Icons.delete,
           color: Colors.redAccent,
