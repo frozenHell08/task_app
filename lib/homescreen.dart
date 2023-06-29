@@ -5,6 +5,7 @@ import 'package:task_app/widgets/card_shadow.dart';
 import 'package:task_app/widgets/confirm_dialog.dart';
 import 'package:realm/realm.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:task_app/widgets/list_tile.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,14 +16,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final Logger logger = Logger();
-
-  // final initialTasks = [
-  //   TaskItem(ObjectId(), 'Apple', 'red one'),
-  //   TaskItem(ObjectId(), 'Milk', 'Birch or Bear Brand'),
-  //   TaskItem(ObjectId(), 'Yogurt', 'Blueberry or Vanilla Pascal'),
-  // ];
-
   dynamic taskLists;
+  int completedTasksCount = 0;
   // -------------------- LOADING --------------------
   // bool _isLoading = true;
 
@@ -63,6 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     super.initState();
+    _fetchCount();
   }
 
   @override
@@ -71,31 +67,36 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _updateData(int? id) async {
-    final editingData = taskLists[id];
-
-    realm.write(() {
-      editingData.title = _titleController.text;
-      editingData.description = _descController.text;
-    });
-  }
-
-  Future<void> _addData() async {
-    String title = _titleController.text;
-    String desc = _descController.text;
-    final newData = TaskItem(ObjectId(), title, desc, false);
-
-    realm.write(() {
-      realm.add(newData);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         title: const Text('Task list'),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            const ListTile(
+              title: Text(
+                'Summary',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+            SummaryTile(
+              title: 'Total tasks listed.',
+              description: taskLists != null ? '${taskLists.length}' : '0',
+              titleSize: 15,
+              descSize: 12,
+            ),
+            SummaryTile(
+              title: 'Total tasks completed.',
+              description: taskLists != null ? completedTasksCount.toString() : '0',
+              titleSize: 15,
+              descSize: 12
+            ),
+          ],
+        ),
       ),
       body: taskLists.isEmpty
           ? const Center(
@@ -140,6 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 realm.write(() {
                                   realm.delete<TaskItem>(task);
                                 });
+                                _fetchCount();
                               });
                               Navigator.pop(context);
                             },
@@ -155,16 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       isChecked = value!;
                       logger.i('checkbox clicked : $value');
                       realm.write(() => task.isDone = isChecked);
-
-                      // if (isChecked) {
-                      //   task.description = const TextStyle(
-                      //     decoration: TextDecoration.lineThrough,
-                      //   );
-                      // } else {
-                      //   task.description = const TextStyle(
-                      //     decoration: TextDecoration.none,
-                      //   );
-                      // }
+                      _fetchCount();
                     }),
                   },
                 );
@@ -191,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _descController.text = existingData.description;
     }
 
-    showModalBottomSheet(
+    await showModalBottomSheet(
         elevation: 5,
         isScrollControlled: true,
         context: context,
@@ -239,9 +232,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             _addData();
                           }
                         });
-
-                        _titleController.clear();
-                        _descController.clear();
                         navigator.pop();
                       },
                       child: Padding(
@@ -258,6 +248,48 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-            ));
+            )).then((value) {
+              setState(() {
+                _titleController.clear();
+                _descController.clear();
+              });
+            });
   }
+
+  Future<void> _updateData(int? id) async {
+    final editingData = taskLists[id];
+
+    realm.write(() {
+      editingData.title = _titleController.text;
+      editingData.description = _descController.text;
+    });
+  }
+
+  Future<void> _addData() async {
+    String title = _titleController.text;
+    String desc = _descController.text;
+    final newData = TaskItem(ObjectId(), title, desc, false);
+
+    realm.write(() {
+      realm.add(newData);
+    });
+  }
+
+  Future<int> _completedTasks() async {
+    int total = 0;
+
+    for (var task in taskLists) {
+      if (task.isDone) total++;
+    }
+
+    return total;
+  }
+
+  Future<void> _fetchCount() async {
+    int count = await _completedTasks();
+    setState(() {
+      completedTasksCount = count;
+    });
+  }
+
 }
